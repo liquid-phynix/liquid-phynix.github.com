@@ -1,6 +1,8 @@
-# Jekyll-Bootstrap
+# mcstar's web log 
 
-The quickest way to start and publish your Jekyll powered blog. 100% compatible with GitHub pages
+visit <http://liquid-phynix.github.com>
+
+<!--
 
 ## Usage
 
@@ -44,3 +46,4 @@ The master and gh-pages branch do not share the same ancestry. Please treat them
 ## License
 
 [MIT](http://opensource.org/licenses/MIT)
+-->
