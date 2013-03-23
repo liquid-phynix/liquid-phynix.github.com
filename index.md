@@ -4,7 +4,6 @@ title: <div style="display:table; width:100%;"><div style="display:table-cell;ve
 tagline: # Supporting tagline
 ---
 {% include JB/setup %}
-![sc](screenshot.png)
 
 ## Posts
 
