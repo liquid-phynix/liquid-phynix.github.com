@@ -1,6 +1,6 @@
 ---
 layout: page
-title: <div style="display:table; width:100%;"><div style="display:table-cell;vertical-align:middle;float:left;">Building Better Worlds</div><img style="box-shadow:0px 0px 0px 0px;display:table-cell;vertical-align:middle;float:right" height=150px src="assets/images/wl.png"></div>
+title: "Building Better Worlds"
 tagline: # Supporting tagline
 ---
 {% include JB/setup %}
