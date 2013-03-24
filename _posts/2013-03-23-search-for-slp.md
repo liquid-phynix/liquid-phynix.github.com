@@ -16,7 +16,7 @@ Straight line programs (SLP) are defined over the integers and the binary arithm
 ## The search
 The immediate solution to this problem is a brute force Depth First Search (DFS). We fix the length of the SLP, and choose a list of operators, and choose the index <span>\( m \)</span> for each operator (since the other index is the one before it), and evaluate the SLP. We check if it equals to the number we seek, i.e. <span>\( n! \)</span>.
 
-## The program
+## The program without templates
 Below you will find a C++ program that searches through SLP's of length 14 looking for <span>\( n! \)</span> where <span>\( n \)</span> is provided as a command line argument.
 
 {% highlight c++ linenos %}
@@ -183,6 +183,163 @@ and link with
 `g++ -lboost_serialization -lboost_system -lboost_mpi slp-dfs-14.o -o slp-dfs-14`
 
 (or do it in one step, if you prefer).
+
+## With templates
+
+We can make the above code look a little nicer, and we can automate the code generation for arbitrary legth SLP's by using a very simple case of template metaprogramming. I added a preprocessor flag, LENGTH, that supplied the length of the SLP's, if you omit it from the compilation command it defaults to <span>\( 14 \)</span>.
+
+{% highlight c++ linenos %}
+#include <iostream>
+#include <vector>
+#include <string>
+#include <cstring>
+#include <cstdio>
+
+#include <boost/mpi.hpp>
+#include <boost/serialization/vector.hpp>
+
+typedef __int128 LI;
+typedef LI(*Binop)(LI, LI);
+
+#ifdef LENGTH
+const int RAW = LENGTH;
+#else
+const int RAW = 14;
+#endif
+
+LI TARGET;
+const int OC = 3;
+
+using namespace std;
+using namespace boost::mpi;
+
+Binop opers[OC];
+const char* annots[OC] = {" (*) ", " (+) ", " (-) "};
+
+LI Op(LI x, LI y){ return x + y; }
+LI Ot(LI x, LI y){ return x * y; }
+LI Om(LI x, LI y){ return x - y; }
+
+LI fact(LI n){ return (n == 1LL) ? 1 : n * fact(n - 1); }
+
+int OAR[RAW - 1];
+int OAR2[RAW - 1];
+LI SLP[RAW + 1];
+
+template<int opidx> struct Loop{
+  static void loop(){
+    OAR2[opidx]++;
+    if(OAR2[opidx] == OC){
+      OAR2[opidx] = 0;
+      Loop<opidx - 1>::loop();
+    }
+  }
+  static bool check(){
+    for(int operandidx = 0; operandidx <= (RAW - 1 - opidx);  operandidx++){
+      SLP[RAW - opidx] =  opers[OAR[RAW - 2 - opidx]](SLP[RAW - 1 - opidx],  SLP[operandidx]);
+      Loop<opidx - 1>::check();
+    }
+  }
+};
+
+template<> struct Loop<0>{
+  static void loop(){ OAR2[0]++; }
+  static void check(){
+    for(int operandidx = 0; operandidx <= (RAW - 1);  operandidx++){
+      SLP[RAW] =  opers[OAR[RAW - 2]](SLP[RAW - 1],  SLP[operandidx]);
+      if(SLP[RAW] == TARGET){  
+        cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\ntarget found: 1 2 ";
+        for(int i = 2; i <= RAW; i++)
+          printf("0x%llx ", SLP[i]);
+        cout << endl;
+        throw 1;
+      }
+    }
+  }
+};
+
+void next_ops(){
+  if(OAR2[0] == OC) throw 0;
+  memcpy(OAR, OAR2, sizeof(int) * (RAW - 1));
+  Loop<RAW - 2>::loop();
+}
+
+void show_ops(){
+  for(int i = 0; i < RAW - 1; i++)
+    cout << annots[OAR[i]];
+}
+
+int main(int argc, char* argv[]){
+  if(argc < 2){
+    cout << "usage: < " << argv[0] << " n > to search for n!" << endl;
+    return -1;
+  }
+
+  opers[0] = &Ot; opers[1] = &Op; opers[2] = &Om;
+
+  int n = atoi(argv[1]);
+  TARGET = fact(n);
+
+  environment env(argc, argv);
+  communicator world;
+
+  if(world.rank() == 0){
+    printf("searching for %d! among length %d SLP's", n, RAW);
+    cout << endl;
+  }
+
+  memset(&SLP, 0, (RAW + 1) * sizeof(LI));
+  SLP[0] = 1; SLP[1] = 2;
+  memset(&OAR, 0, (RAW - 1) * sizeof(int));
+  memset(&OAR2, 0, (RAW - 1) * sizeof(int));
+
+  if(world.rank() == 0){
+    int slaves = world.size() - 1;
+    request reqs[slaves];
+    try{
+      for(int rank = 1; rank < world.size(); rank++){
+        next_ops(); show_ops(); cout << " to rank " << rank << endl;
+        world.isend(rank, 0, OAR, RAW - 1);
+        reqs[rank - 1] = world.irecv(rank, 1);
+      }
+      while(true){
+        for(int i = 0; i < slaves; i++){
+          boost::optional<status> opstatus = reqs[i].test();
+          if(opstatus){
+            next_ops(); show_ops(); cout << " to rank " << (i + 1) << endl;
+            world.isend(i + 1, 0, OAR, RAW - 1);
+            reqs[i] = world.irecv(i + 1, 1);
+          }
+        }
+        usleep(50);
+      }
+    }catch(int){
+      cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~\noperator products exhausted\n~~~~~~~~~~~~~~~~~~~~~~~~~~~"  << endl;
+      wait_all(reqs, reqs + slaves);
+      world.abort(0);
+    }
+  }else{
+    while(true){
+      world.recv(0, 0, OAR, RAW - 1);
+      try{
+        Loop<RAW - 2>::check();
+      }catch(int){
+        cout << "opers: ";
+        for(int i = 0; i < RAW - 1; i++)
+          cout << annots[OAR[i]];
+        cout << "\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" << endl;
+        world.abort(1);
+      }
+      world.send(0, 1);
+    }
+  }
+  return 0;
+}
+{% endhighlight %}
+
+I removed the one `auto` keyword from the code, so you can compile it with
+
+`g++ -O3 -lboost_serialization -lboost_system -lboost_mpi slp-all.cpp -DLENGTH=7 -o slp-all`
 
 ## Results
 
