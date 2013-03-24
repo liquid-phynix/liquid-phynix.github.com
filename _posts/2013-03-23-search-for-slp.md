@@ -21,8 +21,6 @@ Below you will find a C++ program that searches through SLP's of length 14 looki
 
 {% highlight c++ linenos %}
 #include <iostream>
-#include <vector>
-#include <string>
 #include <cstring>
 #include <cstdio>
 
@@ -190,8 +188,6 @@ We can make the above code look a little nicer, and we can automate the code gen
 
 {% highlight c++ linenos %}
 #include <iostream>
-#include <vector>
-#include <string>
 #include <cstring>
 #include <cstdio>
 
