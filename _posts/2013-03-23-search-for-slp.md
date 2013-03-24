@@ -339,7 +339,7 @@ I removed the one `auto` keyword from the code, so you can compile it with
 
 ## Results
 
-I computed factorials from <span>\( 5! \)</span> to <span>\( 19! \)</span>. The above program was not used in the search, since it searches among SLP's of length <span>\( 14 \)</span>, but <span>\( 19! \)</span> has a length of <span>\( 13 \)</span>. The interpretation is that the intermediate result, is the result of the operator below it evaluated at the number before it, and at another number, that is somewhere in the list. Take <span>\( 5! \)</span> for example: <span>\( 120 = 128 - 8 \)</span>, <span>\( 128 = 16 * 8 \)</span>, <span>\( 16 = 8 * 2 \)</span>, <span>\( 8 = 4 * 2 \)</span> and <span>\( 4 = 2 * 2 \)</span>.
+I computed factorials from <span>\( 5! \)</span> to <span>\( 19! \)</span>. The interpretation of the results below is this: the <span>\( n^{th} \)</span> intermediate result is the result of the operator below it, evaluated at the number before it, and at another number, which is somewhere in the list. Take <span>\( 5! \)</span> for example: <span>\( 120 = 128 - 8 \)</span>, <span>\( 128 = 16 * 8 \)</span>, <span>\( 16 = 8 * 2 \)</span>, <span>\( 8 = 4 * 2 \)</span> and <span>\( 4 = 2 * 2 \)</span>.
 
 To get a sense of the size of the search space, the similar code to exhaustively search through all SLP's of length <span>\( 13 \)</span> took around 12 hours on a cluster of 256 cores of Xeon L5420 cpu's running at 2.50GHz.
 
