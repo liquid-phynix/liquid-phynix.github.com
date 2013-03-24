@@ -34,13 +34,13 @@ typedef LI(*Binop)(LI, LI);
 
 const int RAW = 14;
 LI TARGET;
-const int OC = 2; //3;
+const int OC = 3;
 
 using namespace std;
 using namespace boost::mpi;
 
 Binop opers[OC];
-const char* annots[OC] = {" (*) ", " (+) "}; //, " (-) "};
+const char* annots[OC] = {" (*) ", " (+) ", " (-) "};
 
 LI Op(LI x, LI y){ return x + y; }
 LI Ot(LI x, LI y){ return x * y; }
@@ -186,7 +186,7 @@ and link with
 
 ## With templates
 
-We can make the above code look a little nicer, and we can automate the code generation for arbitrary legth SLP's by using a very simple case of template metaprogramming. I added a preprocessor flag, LENGTH, that supplied the length of the SLP's, if you omit it from the compilation command it defaults to <span>\( 14 \)</span>.
+We can make the above code look a little nicer, and we can automate the code generation for arbitrary legth SLP's by using a very simple case of template metaprogramming. I added a preprocessor flag, LENGTH, that supplies the length of the SLP's, if you omit it from the compilation command it defaults to <span>\( 14 \)</span>.
 
 {% highlight c++ linenos %}
 #include <iostream>
