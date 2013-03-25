@@ -3,7 +3,7 @@ layout: post
 title: "Search for SLP"
 description: ""
 category: 
-tags: [SLP, straight line program, factorial, shortest SLP]
+tags: [shortest SLP, straight line program, factorial]
 ---
 {% include JB/setup %}
 
